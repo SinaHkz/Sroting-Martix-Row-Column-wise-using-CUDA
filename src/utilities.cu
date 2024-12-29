@@ -1,7 +1,7 @@
 #include "utilities.h"
 
 // Function to read a matrix from "input.txt"
-void** readMatrix(const char* filename, int* rows, int* cols, MatrixType* type) {
+void* readMatrix(const char* filename, int* rows, int* cols, MatrixType* type) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file");
@@ -37,44 +37,38 @@ void** readMatrix(const char* filename, int* rows, int* cols, MatrixType* type) 
         elementSize = sizeof(double);
     }
 
-    // Allocate memory for the matrix
-    void** matrix = (void** )malloc(*rows * sizeof(void*));
+    // Allocate memory for the matrix as a single contiguous block
+    void* matrix = malloc(*rows * *cols * elementSize);
     if (matrix == NULL) {
-        perror("Error allocating memory for matrix rows");
+        perror("Error allocating memory for matrix");
         fclose(file);
         return NULL;
     }
 
-    for (int i = 0; i < *rows; i++) {
-        matrix[i] = malloc(*cols * elementSize);
-        if (matrix[i] == NULL) {
-            perror("Error allocating memory for matrix columns");
-            for (int j = 0; j < i; j++) {
-                free(matrix[j]);
-            }
-            free(matrix);
-            fclose(file);
-            return NULL;
-        }
-    }
-
-    // Read matrix elements
+    // Read matrix elements into the contiguous memory block
     for (int i = 0; i < *rows; i++) {
         for (int j = 0; j < *cols; j++) {
+            size_t index = i * (*cols) + j;
             if (*type == INT) {
-                if (fscanf(file, "%d", &((int*)matrix[i])[j]) != 1) {
+                if (fscanf(file, "%d", &((int*)matrix)[index]) != 1) {
                     fprintf(stderr, "Error reading matrix element at (%d, %d)\n", i, j);
-                    goto cleanup;
+                    free(matrix);
+                    fclose(file);
+                    return NULL;
                 }
             } else if (*type == FLOAT) {
-                if (fscanf(file, "%f", &((float*)matrix[i])[j]) != 1) {
+                if (fscanf(file, "%f", &((float*)matrix)[index]) != 1) {
                     fprintf(stderr, "Error reading matrix element at (%d, %d)\n", i, j);
-                    goto cleanup;
+                    free(matrix);
+                    fclose(file);
+                    return NULL;
                 }
             } else if (*type == DOUBLE) {
-                if (fscanf(file, "%lf", &((double*)matrix[i])[j]) != 1) {
+                if (fscanf(file, "%lf", &((double*)matrix)[index]) != 1) {
                     fprintf(stderr, "Error reading matrix element at (%d, %d)\n", i, j);
-                    goto cleanup;
+                    free(matrix);
+                    fclose(file);
+                    return NULL;
                 }
             }
         }
@@ -82,18 +76,10 @@ void** readMatrix(const char* filename, int* rows, int* cols, MatrixType* type) 
 
     fclose(file);
     return matrix;
-
-cleanup:
-    for (int i = 0; i < *rows; i++) {
-        free(matrix[i]);
-    }
-    free(matrix);
-    fclose(file);
-    return NULL;
 }
 
 // Function to write a matrix to a file
-void writeMatrix(const char* filename, void** matrix, int rows, int cols, MatrixType type) {
+void writeMatrix(const char* filename, void* matrix, int rows, int cols, MatrixType type) {
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
         perror("Error opening file for writing");
@@ -104,15 +90,16 @@ void writeMatrix(const char* filename, void** matrix, int rows, int cols, Matrix
     const char* typeStr = (type == INT) ? "int" : (type == FLOAT) ? "float" : "double";
     fprintf(file, "%s %d %d\n", typeStr, rows, cols);
 
-    // Write matrix elements
+    // Write matrix elements from the contiguous memory block
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
+            size_t index = i * cols + j;
             if (type == INT) {
-                fprintf(file, "%d ", ((int*)matrix[i])[j]);
+                fprintf(file, "%d ", ((int*)matrix)[index]);
             } else if (type == FLOAT) {
-                fprintf(file, "%f ", ((float*)matrix[i])[j]);
+                fprintf(file, "%f ", ((float*)matrix)[index]);
             } else if (type == DOUBLE) {
-                fprintf(file, "%lf ", ((double*)matrix[i])[j]);
+                fprintf(file, "%lf ", ((double*)matrix)[index]);
             }
         }
         fprintf(file, "\n");
@@ -120,4 +107,3 @@ void writeMatrix(const char* filename, void** matrix, int rows, int cols, Matrix
 
     fclose(file);
 }
-

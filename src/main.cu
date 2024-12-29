@@ -2,31 +2,17 @@
 
 #define BLOCKSIZE 32
 
-void copyMatrixFromDeviceToHost(void **deviceMatrix, void **matrix, int rows, int cols, MatrixType type)
+void copyMatrixFromDeviceToHost(void *deviceMatrix, void *matrix, int rows, int cols, MatrixType type)
 {
-    switch (type)
-    {
-    case INT:
-        for (int i = 0; i < rows; i++)
-        {
-            cudaMemcpy(matrix[i], deviceMatrix[i], cols * sizeof(int), cudaMemcpyDeviceToHost);
-        }
-        break;
-
-    case FLOAT:
-        for (int i = 0; i < rows; i++)
-        {
-            cudaMemcpy(matrix[i], deviceMatrix[i], cols * sizeof(float), cudaMemcpyDeviceToHost);
-        }
-        break;
-
-    case DOUBLE:
-        for (int i = 0; i < rows; i++)
-        {
-            cudaMemcpy(matrix[i], deviceMatrix[i], cols * sizeof(double), cudaMemcpyDeviceToHost);
-        }
-        break;
+    size_t elementSize;
+    if (type == INT) {
+        elementSize = sizeof(int);
+    } else if (type == FLOAT) {
+        elementSize = sizeof(float);
+    } else {
+        elementSize = sizeof(double);
     }
+    cudaMemcpy(matrix, deviceMatrix, rows * cols * elementSize, cudaMemcpyDeviceToHost);
 }
 
 int main(int argc, char **argv)
@@ -35,98 +21,90 @@ int main(int argc, char **argv)
     MatrixType type;
 
     // read the matrix from input file
-    void **matrix = readMatrix(argv[1], &rows, &cols, &type);
+    void *matrix = readMatrix(argv[1], &rows, &cols, &type);
 
     if (matrix == NULL)
         return 1;
 
-    // set grid and bloxk size
-    dim3 block(BLOCKSIZE, BLOCKSIZE);
-    dim3 grid((rows + block.x - 1) / block.x);
+    // set grid and block size
+    dim3 block(BLOCKSIZE,BLOCKSIZE);
+    dim3 grid((rows + block.x - 1) / block.x,(rows + block.x - 1) / block.x);
 
-    void **deviceMatrix;
+    void *deviceMatrix;
 
+    // Allocate memory on the device
+    size_t elementSize;
+    if (type == INT) {
+        elementSize = sizeof(int);
+    } else if (type == FLOAT) {
+        elementSize = sizeof(float);
+    } else {
+        elementSize = sizeof(double);
+    }
+
+    cudaMallocManaged(&deviceMatrix, rows * cols * elementSize);
+    cudaMemcpy(deviceMatrix, matrix, rows * cols * elementSize, cudaMemcpyHostToDevice);
+
+    void *output;
+    cudaMallocManaged(&output, rows * cols * elementSize);  // Assuming output is for int transpose
+
+    // Launch kernels for sorting and possibly other operations
     switch (type)
     {
     case INT:
-        cudaMallocManaged(&deviceMatrix, rows * sizeof(int *));
-        for (int i = 0; i < rows; i++)
-        {
-            cudaMallocManaged(&(deviceMatrix[i]), cols * sizeof(int));
-            cudaMemcpy(deviceMatrix[i], matrix[i], cols * sizeof(int), cudaMemcpyHostToDevice);
-        }
+        // for (int i = 0; i < 5; i++){
+        sortRowsKernelInt<<<grid, block>>>((int *)deviceMatrix, rows, cols);
+        transposeKernelInt<<<grid, block>>>((int *)deviceMatrix, (int *)output, rows, cols); 
+        deviceMatrix = output;   
+        // }
         break;
-
     case FLOAT:
-        cudaMallocManaged(&deviceMatrix, rows * sizeof(float *));
-        for (int i = 0; i < rows; i++)
-        {
-            cudaMallocManaged(&(deviceMatrix[i]), cols * sizeof(float));
-            cudaMemcpy(deviceMatrix[i], matrix[i], cols * sizeof(float), cudaMemcpyHostToDevice);
-        }
+        sortRowsKernelFloat<<<grid, block>>>((float *)deviceMatrix, rows, cols);
         break;
-
     case DOUBLE:
-        cudaMallocManaged(&deviceMatrix, rows * sizeof(double *));
-        for (int i = 0; i < rows; i++)
-        {
-            cudaMallocManaged(&(deviceMatrix[i]), cols * sizeof(double));
-            cudaMemcpy(deviceMatrix[i], matrix[i], cols * sizeof(double), cudaMemcpyHostToDevice);
-        }
+        sortRowsKernelDouble<<<grid, block>>>((double *)deviceMatrix, rows, cols);
         break;
     }
-    void* output;
-    cudaMallocManaged(&output, rows * cols * sizeof(int *));
+
+    cudaDeviceSynchronize();
     
 
-    // launchSortKernel(deviceMatrix, rows, cols, type, block, grid);
-    switch (type)
-    {
-    case INT:
-        sortRowsKernelInt<<<grid, block>>>((int **)(deviceMatrix), rows, cols);
-        transposeKernelInt<<<grid, block>>>((int**)(deviceMatrix), (int*)output, rows, cols);
-        break;
-    case FLOAT:
-        sortRowsKernelFloat<<<grid, block>>>((float **)(deviceMatrix), rows, cols);
-        break;
-    case DOUBLE:
-        sortRowsKernelDouble<<<grid, block>>>((double **)(deviceMatrix), rows, cols);
-        break;
-    }
 
-
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            printf("%d ", ((int *)deviceMatrix[i])[j]);
-        }
-        printf("\n");
-    }
-
-    printf("\n");
-
-
-
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            printf("%d ", ((int *)output)[i * rows + j]);
-        }
-        printf("\n");
-    }
-
+    // Copy result back to host
     copyMatrixFromDeviceToHost(deviceMatrix, matrix, rows, cols, type);
 
-    for (int i = 0; i < rows; i++)
-    {
-        cudaFree(deviceMatrix[i]);
-    }
-    cudaFree(deviceMatrix);
+    // for (int i = 0; i < rows; i++) {
+    //     for (int j = 0; j < cols; j++) {
+    //         if (type == INT)
+    //             printf("%d ", ((int *)deviceMatrix)[i * cols + j]);
+    //         else if (type == FLOAT)
+    //             printf("%f ", ((float *)deviceMatrix)[i * cols + j]);
+    //         else if (type == DOUBLE)
+    //             printf("%lf ", ((double *)deviceMatrix)[i * cols + j]);
+    //     }
+    //     printf("\n");
+    // }
 
+    // printf("\n");
+
+    // for (int i = 0; i < rows; i++) {
+    //     for (int j = 0; j < cols; j++) {
+    //         if (type == INT)
+    //             printf("%d ", ((int *)output)[i * rows + j]);
+    //         else if (type == FLOAT)
+    //             printf("%f ", ((float *)output)[i * rows + j]);
+    //         else if (type == DOUBLE)
+    //             printf("%lf ", ((double *)output)[i * rows + j]);
+    //     }
+    //     printf("\n");
+    // }
+
+    // Free device memory
+    cudaFree(deviceMatrix);
+    cudaFree(output);
+
+    // Write the matrix to file
     writeMatrix(argv[2], matrix, rows, cols, type);
 
     return 0;
 }
-

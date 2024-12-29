@@ -24,7 +24,10 @@ $(EXEC): $(SRC_FILES)
 run: $(EXEC)
 	$(EXEC) $(INPUT) $(OUTPUT)
 
+profile: $(EXEC)
+	ncu --metrics l1tex__t_bytes.sum.per_second,dram__bytes.sum.per_second  $(EXEC) $(INPUT) $(OUTPUT)
+
 clean:
 	rm -f $(EXEC)
 
-.PHONY: all run clean
+.PHONY: all run profile clean
