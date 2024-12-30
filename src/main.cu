@@ -1,4 +1,4 @@
-#include "kernels.h"
+#include "utilities.h"
 
 #define BLOCKSIZE 32
 
@@ -59,14 +59,14 @@ int main(int argc, char **argv)
     // cudaMalloc(&output, rows * cols * elementSize); // Assuming output is for int transpose
 
     // Launch kernels for sorting
-    for (int i = 0; i < 2; i++)
+    while (!isMatrixSorted(deviceMatrix, rows, cols, type))
     {
-
         switch (type)
         {
         case INT:
             sortRowsKernelInt<<<grid, block>>>((int *)deviceMatrix, rows, cols);
             transposeKernelInt<<<grid, block>>>((int *)deviceMatrix, (int *)deviceMatrix, rows, cols);
+            // printf("0");
             // deviceMatrix = output;
             break;
         case FLOAT:
@@ -97,30 +97,28 @@ int main(int argc, char **argv)
     return 0;
 }
 
+// for (int i = 0; i < rows; i++) {
+//     for (int j = 0; j < cols; j++) {
+//         if (type == INT)
+//             printf("%d ", ((int *)deviceMatrix)[i * cols + j]);
+//         else if (type == FLOAT)
+//             printf("%f ", ((float *)deviceMatrix)[i * cols + j]);
+//         else if (type == DOUBLE)
+//             printf("%lf ", ((double *)deviceMatrix)[i * cols + j]);
+//     }
+//     printf("\n");
+// }
 
+// printf("\n");
 
-    // for (int i = 0; i < rows; i++) {
-    //     for (int j = 0; j < cols; j++) {
-    //         if (type == INT)
-    //             printf("%d ", ((int *)deviceMatrix)[i * cols + j]);
-    //         else if (type == FLOAT)
-    //             printf("%f ", ((float *)deviceMatrix)[i * cols + j]);
-    //         else if (type == DOUBLE)
-    //             printf("%lf ", ((double *)deviceMatrix)[i * cols + j]);
-    //     }
-    //     printf("\n");
-    // }
-
-    // printf("\n");
-
-    // for (int i = 0; i < rows; i++) {
-    //     for (int j = 0; j < cols; j++) {
-    //         if (type == INT)
-    //             printf("%d ", ((int *)output)[i * rows + j]);
-    //         else if (type == FLOAT)
-    //             printf("%f ", ((float *)output)[i * rows + j]);
-    //         else if (type == DOUBLE)
-    //             printf("%lf ", ((double *)output)[i * rows + j]);
-    //     }
-    //     printf("\n");
-    // }
+// for (int i = 0; i < rows; i++) {
+//     for (int j = 0; j < cols; j++) {
+//         if (type == INT)
+//             printf("%d ", ((int *)output)[i * rows + j]);
+//         else if (type == FLOAT)
+//             printf("%f ", ((float *)output)[i * rows + j]);
+//         else if (type == DOUBLE)
+//             printf("%lf ", ((double *)output)[i * rows + j]);
+//     }
+//     printf("\n");
+// }

@@ -107,3 +107,49 @@ void writeMatrix(const char* filename, void* matrix, int rows, int cols, MatrixT
 
     fclose(file);
 }
+
+
+// Main function to check if the matrix is sorted for different types
+bool isMatrixSorted(void *matrix, int rows, int cols, MatrixType type) {
+    int *foundUnsorted;
+    cudaMalloc(&foundUnsorted, sizeof(int));
+    cudaMemset(foundUnsorted, 0, sizeof(int));
+
+    // Choose the correct kernel based on the type
+    switch (type) {
+        case INT: {
+            // Check for int type
+            checkSortedRowWiseInt<<<(rows + 255) / 256, 256>>>((int*)matrix, rows, cols, foundUnsorted);
+            checkSortedColumnWiseInt<<<(cols + 255) / 256, 256>>>((int*)matrix, rows, cols, foundUnsorted);
+            break;
+        }
+        case FLOAT: {
+            // Check for float type
+            checkSortedRowWiseFloat<<<(rows + 255) / 256, 256>>>((float*)matrix, rows, cols, foundUnsorted);
+            checkSortedColumnWiseFloat<<<(cols + 255) / 256, 256>>>((float*)matrix, rows, cols, foundUnsorted);
+            break;
+        }
+        case DOUBLE: {
+            // Check for double type
+            checkSortedRowWiseDouble<<<(rows + 255) / 256, 256>>>((double*)matrix, rows, cols, foundUnsorted);
+            checkSortedColumnWiseDouble<<<(cols + 255) / 256, 256>>>((double*)matrix, rows, cols, foundUnsorted);
+            break;
+        }
+        default:
+            printf("Invalid type\n");
+            cudaFree(foundUnsorted);
+            return false;
+    }
+
+    // Synchronize and retrieve the result
+    cudaDeviceSynchronize();
+
+    int unsorted;
+    cudaMemcpy(&unsorted, foundUnsorted, sizeof(int), cudaMemcpyDeviceToHost);
+
+    // Free allocated memory
+    cudaFree(foundUnsorted);
+
+    // Return true if sorted, false if unsorted
+    return unsorted == 0;
+}

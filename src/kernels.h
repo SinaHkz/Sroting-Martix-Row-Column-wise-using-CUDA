@@ -1,8 +1,21 @@
 #include "stdlib.h"
-#include "utilities.h"
+// #include "utilities.h"
 
 
-#include <cuda_runtime.h>
+
+__global__ void checkSortedRowWiseInt(int *matrix, int rows, int cols, int *foundUnsorted);
+
+__global__ void checkSortedRowWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted);
+
+__global__ void checkSortedRowWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted);
+
+__global__ void checkSortedColumnWiseInt(int *matrix, int rows, int cols, int *foundUnsorted);
+
+__global__ void checkSortedColumnWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted);
+
+__global__ void checkSortedColumnWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted);
+
+
 
 // Declare the kernel
 __global__ void sortRowsKernelInt(int *matrix, int rows, int cols);

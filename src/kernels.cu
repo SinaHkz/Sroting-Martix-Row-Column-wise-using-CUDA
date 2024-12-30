@@ -2,6 +2,97 @@
 
 #define TILE_SIZE 32
 
+//kernel to check if a matrix is sorted or not
+__global__ void checkSortedRowWiseInt(int *matrix, int rows, int cols, int *foundUnsorted) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= rows) return;  // Avoid out-of-bounds access
+
+    // Check if an unsorted element has already been found (early exit)
+    if (*foundUnsorted) return;
+
+    for (int j = 0; j < cols - 1; j++) {
+        if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
+            // Mark unsorted element found
+            atomicExch(foundUnsorted, 1);  // Set flag to 1 (unsorted detected)
+            return;  // Exit early for this thread
+        }
+    }
+}
+
+__global__ void checkSortedRowWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= rows) return;
+
+    if (*foundUnsorted) return;
+
+    for (int j = 0; j < cols - 1; j++) {
+        if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
+            atomicExch(foundUnsorted, 1);
+            return;
+        }
+    }
+}
+
+__global__ void checkSortedRowWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= rows) return;
+
+    if (*foundUnsorted) return;
+
+    for (int j = 0; j < cols - 1; j++) {
+        if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
+            atomicExch(foundUnsorted, 1);
+            return;
+        }
+    }
+}
+
+
+__global__ void checkSortedColumnWiseInt(int *matrix, int rows, int cols, int *foundUnsorted) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= cols) return;  // Avoid out-of-bounds access
+
+    // Check if an unsorted element has already been found (early exit)
+    if (*foundUnsorted) return;
+
+    for (int i = 0; i < rows - 1; i++) {
+        if (matrix[i * cols + idx] > matrix[(i + 1) * cols + idx]) {
+            // Mark unsorted element found
+            atomicExch(foundUnsorted, 1);  // Set flag to 1 (unsorted detected)
+            return;  // Exit early for this thread
+        }
+    }
+}
+
+__global__ void checkSortedColumnWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= cols) return;
+
+    if (*foundUnsorted) return;
+
+    for (int i = 0; i < rows - 1; i++) {
+        if (matrix[i * cols + idx] > matrix[(i + 1) * cols + idx]) {
+            atomicExch(foundUnsorted, 1);
+            return;
+        }
+    }
+}
+
+__global__ void checkSortedColumnWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= cols) return;
+
+    if (*foundUnsorted) return;
+
+    for (int i = 0; i < rows - 1; i++) {
+        if (matrix[i * cols + idx] > matrix[(i + 1) * cols + idx]) {
+            atomicExch(foundUnsorted, 1);
+            return;
+        }
+    }
+}
+
+
 // kernels to sort all rows with multiple data types
 __global__ void sortRowsKernelInt(int *matrix, int rows, int cols)
 {
