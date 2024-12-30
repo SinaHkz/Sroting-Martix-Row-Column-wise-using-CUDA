@@ -26,3 +26,8 @@ __global__ void transposeKernelFloat(float *input, float *output, int rows, int 
 __device__ void bubbleSortDouble(double *row, int cols);
 __device__ void bubbleSortFloat(float *row, int cols);
 __device__ void bubbleSortInt(int *row, int cols);
+
+
+__device__ void mergeSortInt(int *array, int cols);
+__device__ void mergeSortFloat(float *array, int cols);
+__device__ void mergeSortDouble(double *array, int cols);
