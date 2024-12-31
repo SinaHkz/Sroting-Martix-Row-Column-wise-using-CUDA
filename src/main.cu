@@ -27,6 +27,7 @@ int main(int argc, char **argv)
     MatrixType type;
     void *deviceMatrix;
     void *output;
+    int *foundUnsorted;
 
     // read the matrix from input file
     void *matrix = readMatrix(argv[1], &rows, &cols, &type);
@@ -58,10 +59,11 @@ int main(int argc, char **argv)
 
     cudaMalloc(&deviceMatrix, rows * cols * elementSize);
     cudaMalloc(&output, rows * cols * elementSize);
+    cudaMallocManaged(&foundUnsorted, sizeof(int));
     cudaMemcpy(deviceMatrix, matrix, rows * cols * elementSize, cudaMemcpyHostToDevice);
 
     // Launch kernels for sorting
-    while (!isMatrixSorted(deviceMatrix, rows, cols, type))
+    while (!isMatrixSorted(deviceMatrix, rows, cols, type, foundUnsorted))
     {
         int temp;
         switch (type)
@@ -100,6 +102,7 @@ int main(int argc, char **argv)
     // Free device memory
     cudaFree(deviceMatrix);
     cudaFree(output);
+    cudaFree(foundUnsorted);
     // Write the matrix to file
     writeMatrix(argv[2], matrix, rows, cols, type);
 

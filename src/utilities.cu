@@ -112,12 +112,11 @@ void writeMatrix(const char* filename, void* matrix, int rows, int cols, MatrixT
 
 
 // Main function to check if the matrix is sorted for different types
-bool isMatrixSorted(void *matrix, int rows, int cols, MatrixType type) {
-    int *foundUnsorted;
+bool isMatrixSorted(void *matrix, int rows, int cols, MatrixType type, int *foundUnsorted) {
     dim3 block(BLOCKSIZE);
     dim3 grid((rows + block.x - 1) / block.x, (rows + block.y - 1) / block.y);
-    cudaMallocManaged(&foundUnsorted, sizeof(int));
-    cudaMemset(foundUnsorted, 0, sizeof(int));
+    // cudaMemset(foundUnsorted, 0, sizeof(int));
+    *foundUnsorted = 0;
 
     // Choose the correct kernel based on the type
     switch (type) {
@@ -141,19 +140,13 @@ bool isMatrixSorted(void *matrix, int rows, int cols, MatrixType type) {
         }
         default:
             printf("Invalid type\n");
-            cudaFree(foundUnsorted);
             return false;
     }
 
     // Synchronize and retrieve the result
     cudaDeviceSynchronize();
 
-    int unsorted;
-    cudaMemcpy(&unsorted, foundUnsorted, sizeof(int), cudaMemcpyDeviceToHost);
-
-    // Free allocated memory
-    cudaFree(foundUnsorted);
 
     // Return true if sorted, false if unsorted
-    return unsorted == 0;
+    return *foundUnsorted == 0;
 }

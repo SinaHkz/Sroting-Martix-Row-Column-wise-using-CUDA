@@ -11,7 +11,7 @@ __global__ void checkSortedRowWiseInt(int *matrix, int rows, int cols, int *foun
     // Check if an unsorted element has already been found (early exit)
     if (*foundUnsorted) return;
 
-    for (int j = 0; j < cols - 1; j++) {
+    for (int j = 0; j < cols - 1 && *foundUnsorted == 0; j++) {
         if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
             // Mark unsorted element found
             atomicExch(foundUnsorted, 1);  // Set flag to 1 (unsorted detected)
