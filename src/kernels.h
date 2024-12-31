@@ -15,8 +15,6 @@ __global__ void checkSortedColumnWiseFloat(float *matrix, int rows, int cols, in
 
 __global__ void checkSortedColumnWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted);
 
-
-
 // Declare the kernel
 __global__ void sortRowsKernelInt(int *matrix, int rows, int cols);
 

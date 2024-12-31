@@ -1,5 +1,7 @@
 #include "utilities.h"
 
+#define BLOCKSIZE 32
+
 // Function to read a matrix from "input.txt"
 void* readMatrix(const char* filename, int* rows, int* cols, MatrixType* type) {
     FILE* file = fopen(filename, "r");
@@ -112,15 +114,17 @@ void writeMatrix(const char* filename, void* matrix, int rows, int cols, MatrixT
 // Main function to check if the matrix is sorted for different types
 bool isMatrixSorted(void *matrix, int rows, int cols, MatrixType type) {
     int *foundUnsorted;
-    cudaMalloc(&foundUnsorted, sizeof(int));
+    dim3 block(BLOCKSIZE);
+    dim3 grid((rows + block.x - 1) / block.x, (rows + block.y - 1) / block.y);
+    cudaMallocManaged(&foundUnsorted, sizeof(int));
     cudaMemset(foundUnsorted, 0, sizeof(int));
 
     // Choose the correct kernel based on the type
     switch (type) {
         case INT: {
             // Check for int type
-            checkSortedRowWiseInt<<<(rows + 255) / 256, 256>>>((int*)matrix, rows, cols, foundUnsorted);
-            checkSortedColumnWiseInt<<<(cols + 255) / 256, 256>>>((int*)matrix, rows, cols, foundUnsorted);
+            checkSortedRowWiseInt<<<grid, block>>>((int*)matrix, rows, cols, foundUnsorted);
+            checkSortedColumnWiseInt<<<grid, block>>>((int*)matrix, rows, cols, foundUnsorted);
             break;
         }
         case FLOAT: {

@@ -1,6 +1,7 @@
 #include "kernels.h"
 
 #define TILE_SIZE 32
+#define BLOCK_ROWS 128
 
 //kernel to check if a matrix is sorted or not
 __global__ void checkSortedRowWiseInt(int *matrix, int rows, int cols, int *foundUnsorted) {
@@ -127,7 +128,7 @@ __global__ void sortRowsKernelDouble(double *matrix, int rows, int cols)
 // kernels to transpose matrix for multiple data types
 __global__ void transposeKernelInt(int *input, int *output, int rows, int cols)
 {
-    __shared__ int tile[TILE_SIZE][TILE_SIZE + 1]; // Shared memory with padding
+    __shared__ int tile[TILE_SIZE][TILE_SIZE]; // Shared memory without padding
 
     int x = blockIdx.x * TILE_SIZE + threadIdx.x; // Global column index
     int y = blockIdx.y * TILE_SIZE + threadIdx.y; // Global row index
@@ -135,8 +136,8 @@ __global__ void transposeKernelInt(int *input, int *output, int rows, int cols)
     int local_x = threadIdx.x; // Local column index in the tile
     int local_y = threadIdx.y; // Local row index in the tile
 
-    // Load data into shared memory
-    if (x < cols && y < rows)
+    // Load data into shared memory with bounds checking
+    if (x < cols && y < rows && local_x < TILE_SIZE && local_y < TILE_SIZE)
     {
         tile[local_y][local_x] = input[y * cols + x];
     }
@@ -147,8 +148,8 @@ __global__ void transposeKernelInt(int *input, int *output, int rows, int cols)
     x = blockIdx.y * TILE_SIZE + threadIdx.x;
     y = blockIdx.x * TILE_SIZE + threadIdx.y;
 
-    // Write transposed data to global memory
-    if (x < rows && y < cols)
+    // Write transposed data to global memory with bounds checking
+    if (x < rows && y < cols && local_x < TILE_SIZE && local_y < TILE_SIZE)
     {
         output[y * rows + x] = tile[local_x][local_y];
     }

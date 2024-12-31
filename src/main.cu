@@ -1,6 +1,7 @@
 #include "utilities.h"
 
-#define BLOCKSIZE 32
+#define BLOCKSIZE2D 32
+#define BLOCKSIZE1D 1024
 
 void copyMatrixFromDeviceToHost(void *deviceMatrix, void *matrix, int rows, int cols, MatrixType type)
 {
@@ -24,6 +25,8 @@ int main(int argc, char **argv)
 {
     int rows, cols;
     MatrixType type;
+    void *deviceMatrix;
+    void *output;
 
     // read the matrix from input file
     void *matrix = readMatrix(argv[1], &rows, &cols, &type);
@@ -32,10 +35,11 @@ int main(int argc, char **argv)
         return 1;
 
     // set grid and block size
-    dim3 block(BLOCKSIZE, BLOCKSIZE);
-    dim3 grid((rows + block.x - 1) / block.x, (rows + block.x - 1) / block.x);
+    dim3 block1D(BLOCKSIZE1D);
+    dim3 grid1D((rows + block1D.x - 1) / block1D.x);
 
-    void *deviceMatrix;
+    dim3 block2D(BLOCKSIZE2D, BLOCKSIZE2D);
+    dim3 grid2D((cols + BLOCKSIZE2D - 1) / BLOCKSIZE2D, (rows + BLOCKSIZE2D - 1) / BLOCKSIZE2D);
 
     // Allocate memory on the device
     size_t elementSize;
@@ -53,33 +57,39 @@ int main(int argc, char **argv)
     }
 
     cudaMalloc(&deviceMatrix, rows * cols * elementSize);
+    cudaMalloc(&output, rows * cols * elementSize);
     cudaMemcpy(deviceMatrix, matrix, rows * cols * elementSize, cudaMemcpyHostToDevice);
-
-    // void *output;
-    // cudaMalloc(&output, rows * cols * elementSize); // Assuming output is for int transpose
 
     // Launch kernels for sorting
     while (!isMatrixSorted(deviceMatrix, rows, cols, type))
     {
+        int temp;
         switch (type)
         {
         case INT:
-            sortRowsKernelInt<<<grid, block>>>((int *)deviceMatrix, rows, cols);
-            transposeKernelInt<<<grid, block>>>((int *)deviceMatrix, (int *)deviceMatrix, rows, cols);
-            // printf("0");
-            // deviceMatrix = output;
+            sortRowsKernelInt<<<grid1D, block1D>>>((int *)deviceMatrix, rows, cols);
+            transposeKernelInt<<<grid2D, block2D>>>((int *)deviceMatrix, (int *)output, rows, cols);
+            temp = rows;
+            rows = cols;
+            cols = temp;
             break;
         case FLOAT:
-
-            sortRowsKernelFloat<<<grid, block>>>((float *)deviceMatrix, rows, cols);
-            transposeKernelFloat<<<grid, block>>>((float *)deviceMatrix, (float *)deviceMatrix, rows, cols);
+            sortRowsKernelFloat<<<grid1D, block1D>>>((float *)deviceMatrix, rows, cols);
+            transposeKernelFloat<<<grid2D, block2D>>>((float *)deviceMatrix, (float *)output, rows, cols);
+            temp = rows;
+            rows = cols;
+            cols = temp;
             break;
         case DOUBLE:
-            sortRowsKernelDouble<<<grid, block>>>((double *)deviceMatrix, rows, cols);
-            transposeKernelDouble<<<grid, block>>>((double *)deviceMatrix, (double *)deviceMatrix, rows, cols);
+            sortRowsKernelDouble<<<grid1D, block1D>>>((double *)deviceMatrix, rows, cols);
+            transposeKernelDouble<<<grid2D, block2D>>>((double *)deviceMatrix, (double *)output, rows, cols);
+            temp = rows;
+            rows = cols;
+            cols = temp;
 
             break;
         }
+        cudaMemcpy(deviceMatrix, output, rows * cols * elementSize, cudaMemcpyDeviceToDevice);
     }
 
     cudaDeviceSynchronize();
@@ -89,8 +99,7 @@ int main(int argc, char **argv)
 
     // Free device memory
     cudaFree(deviceMatrix);
-    // cudaFree(output);
-
+    cudaFree(output);
     // Write the matrix to file
     writeMatrix(argv[2], matrix, rows, cols, type);
 
