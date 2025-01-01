@@ -3,96 +3,117 @@
 #define TILE_SIZE 32
 #define BLOCK_ROWS 128
 
-//kernel to check if a matrix is sorted or not
-__global__ void checkSortedRowWiseInt(int *matrix, int rows, int cols, int *foundUnsorted) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= rows) return;  // Avoid out-of-bounds access
+// kernel to check if a matrix is sorted or not
+__global__ void checkSortedRowWiseInt(int *matrix, int rows, int cols, int *foundUnsorted)
+{
+    extern __shared__ int sharedRowCheckInt[];
+    if (*foundUnsorted)
+        return;
+    int idx = blockIdx.x;
+    if (idx < rows)
+    {
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            sharedRowCheckInt[i] = matrix[idx * cols + i];
 
-    // Check if an unsorted element has already been found (early exit)
-    if (*foundUnsorted) return;
+        __syncthreads();
+        // Check if an unsorted element has already been found (early exit)
 
-    for (int j = 0; j < cols - 1 && *foundUnsorted == 0; j++) {
-        if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
-            // Mark unsorted element found
-            atomicExch(foundUnsorted, 1);  // Set flag to 1 (unsorted detected)
-            return;  // Exit early for this thread
+        for (int j = threadIdx.x; j * 2 < cols - 1; j += blockDim.x)
+        {
+            if (sharedRowCheckInt[j * 2] > sharedRowCheckInt[j * 2 + 1])
+            {
+                atomicExch(foundUnsorted, 1);
+                return;
+            }
         }
-    }
-}
 
-__global__ void checkSortedRowWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= rows) return;
+        for (int j = threadIdx.x; j * 2 < cols - 2; j += blockDim.x)
+        {
+            if (sharedRowCheckInt[j * 2 + 1] > sharedRowCheckInt[j * 2 + 2])
+            {
+                atomicExch(foundUnsorted, 1);
+                return;
+            }
+        }
 
-    if (*foundUnsorted) return;
-
-    for (int j = 0; j < cols - 1; j++) {
-        if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
-            atomicExch(foundUnsorted, 1);
+        if (*foundUnsorted)
             return;
-        }
     }
 }
 
-__global__ void checkSortedRowWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= rows) return;
+__global__ void checkSortedRowWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted)
+{
+    extern __shared__ int sharedRowCheckFloat[];
+    if (*foundUnsorted)
+        return;
+    int idx = blockIdx.x;
+    if (idx < rows)
+    {
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            sharedRowCheckFloat[i] = matrix[idx * cols + i];
 
-    if (*foundUnsorted) return;
+        __syncthreads();
+        // Check if an unsorted element has already been found (early exit)
 
-    for (int j = 0; j < cols - 1; j++) {
-        if (matrix[idx * cols + j] > matrix[idx * cols + j + 1]) {
-            atomicExch(foundUnsorted, 1);
+        for (int j = threadIdx.x; j * 2 < cols - 1; j += blockDim.x)
+        {
+            if (sharedRowCheckFloat[j * 2] > sharedRowCheckFloat[j * 2 + 1])
+            {
+                atomicExch(foundUnsorted, 1);
+                return;
+            }
+        }
+
+        for (int j = threadIdx.x; j * 2 < cols - 2; j += blockDim.x)
+        {
+            if (sharedRowCheckFloat[j * 2 + 1] > sharedRowCheckFloat[j * 2 + 2])
+            {
+                atomicExch(foundUnsorted, 1);
+                return;
+            }
+        }
+
+        if (*foundUnsorted)
             return;
-        }
     }
 }
 
+__global__ void checkSortedRowWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted)
+{
+    extern __shared__ int sharedRowCheckDouble[];
+    if (*foundUnsorted)
+        return;
+    int idx = blockIdx.x;
+    if (idx < rows)
+    {
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            sharedRowCheckDouble[i] = matrix[idx * cols + i];
 
-__global__ void checkSortedColumnWiseInt(int *matrix, int rows, int cols, int *foundUnsorted) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= cols) return;  // Avoid out-of-bounds access
+        __syncthreads();
+        // Check if an unsorted element has already been found (early exit)
 
-    // Check if an unsorted element has already been found (early exit)
-    if (*foundUnsorted) return;
-
-    for (int i = 0; i < rows - 1; i++) {
-        if (matrix[i * cols + idx] > matrix[(i + 1) * cols + idx]) {
-            // Mark unsorted element found
-            atomicExch(foundUnsorted, 1);  // Set flag to 1 (unsorted detected)
-            return;  // Exit early for this thread
+        for (int j = threadIdx.x; j * 2 < cols - 1; j += blockDim.x)
+        {
+            if (sharedRowCheckDouble[j * 2] > sharedRowCheckDouble[j * 2 + 1])
+            {
+                atomicExch(foundUnsorted, 1);
+                return;
+            }
         }
-    }
-}
 
-__global__ void checkSortedColumnWiseFloat(float *matrix, int rows, int cols, int *foundUnsorted) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= cols) return;
+        for (int j = threadIdx.x; j * 2 < cols - 2; j += blockDim.x)
+        {
+            if (sharedRowCheckDouble[j * 2 + 1] > sharedRowCheckDouble[j * 2 + 2])
+            {
+                atomicExch(foundUnsorted, 1);
+                return;
+            }
+        }
 
-    if (*foundUnsorted) return;
-
-    for (int i = 0; i < rows - 1; i++) {
-        if (matrix[i * cols + idx] > matrix[(i + 1) * cols + idx]) {
-            atomicExch(foundUnsorted, 1);
+        if (*foundUnsorted)
             return;
-        }
     }
 }
-
-__global__ void checkSortedColumnWiseDouble(double *matrix, int rows, int cols, int *foundUnsorted) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= cols) return;
-
-    if (*foundUnsorted) return;
-
-    for (int i = 0; i < rows - 1; i++) {
-        if (matrix[i * cols + idx] > matrix[(i + 1) * cols + idx]) {
-            atomicExch(foundUnsorted, 1);
-            return;
-        }
-    }
-}
-
 
 // kernels to sort all rows with multiple data types
 __global__ void sortRowsKernelInt(int *matrix, int rows, int cols)
@@ -100,7 +121,8 @@ __global__ void sortRowsKernelInt(int *matrix, int rows, int cols)
     extern __shared__ int sharedRowInt[];
 
     int row = blockIdx.x;
-    if (row < rows){
+    if (row < rows)
+    {
         for (int i = threadIdx.x; i < cols; i += blockDim.x)
             sharedRowInt[i] = matrix[row * cols + i];
 
@@ -117,7 +139,8 @@ __global__ void sortRowsKernelFloat(float *matrix, int rows, int cols)
     extern __shared__ float sharedRowFloat[];
 
     int row = blockIdx.x;
-    if (row < rows){
+    if (row < rows)
+    {
         for (int i = threadIdx.x; i < cols; i += blockDim.x)
             sharedRowFloat[i] = matrix[row * cols + i];
 
@@ -134,7 +157,8 @@ __global__ void sortRowsKernelDouble(double *matrix, int rows, int cols)
     extern __shared__ double sharedRowDouble[];
 
     int row = blockIdx.x;
-    if (row < rows){
+    if (row < rows)
+    {
         for (int i = threadIdx.x; i < cols; i += blockDim.x)
             sharedRowDouble[i] = matrix[row * cols + i];
 
@@ -300,7 +324,6 @@ __device__ void bubbleSortDouble(double *row, int cols)
     }
 }
 
-
 __device__ void mergeSortInt(int *array, int cols)
 {
     int *temp = (int *)malloc(cols * sizeof(int)); // Temporary array for merging
@@ -309,8 +332,8 @@ __device__ void mergeSortInt(int *array, int cols)
     {
         for (int i = 0; i < cols; i += 2 * width) // Iterate over pairs of subarrays
         {
-            int left = i;                 // Left subarray start
-            int mid = min(i + width, cols); // End of left subarray (start of right)
+            int left = i;                         // Left subarray start
+            int mid = min(i + width, cols);       // End of left subarray (start of right)
             int right = min(i + 2 * width, cols); // End of right subarray
 
             int l = left, r = mid, k = left;
@@ -359,8 +382,8 @@ __device__ void mergeSortFloat(float *array, int cols)
     {
         for (int i = 0; i < cols; i += 2 * width) // Iterate over pairs of subarrays
         {
-            int left = i;                 // Left subarray start
-            int mid = min(i + width, cols); // End of left subarray (start of right)
+            int left = i;                         // Left subarray start
+            int mid = min(i + width, cols);       // End of left subarray (start of right)
             int right = min(i + 2 * width, cols); // End of right subarray
 
             int l = left, r = mid, k = left;
@@ -409,8 +432,8 @@ __device__ void mergeSortDouble(double *array, int cols)
     {
         for (int i = 0; i < cols; i += 2 * width) // Iterate over pairs of subarrays
         {
-            int left = i;                 // Left subarray start
-            int mid = min(i + width, cols); // End of left subarray (start of right)
+            int left = i;                         // Left subarray start
+            int mid = min(i + width, cols);       // End of left subarray (start of right)
             int right = min(i + 2 * width, cols); // End of right subarray
 
             int l = left, r = mid, k = left;
