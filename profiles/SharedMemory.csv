@@ -1,0 +1,11 @@
+﻿ID,Estimated Speedup,Function Name,Demangled Name,"Duration""""(8.2008e+07)","Runtime Improvement""""(4.26926e+07)",Compute Throughput,Memory Throughput,# Registers,Grid Size,Block Size
+0,52.47,checkSortedRowWiseInt,checkSortedRowWiseInt(int..,0.05  (+81.99%),0.02,5.05  (-78.52%),8.20  (-87.30%),16   (+0.00%),"   16,  512,    1","   32,    1,    1"
+1,65.18,checkSortedColumnWiseInt,checkSortedColumnWiseInt(int..,0.03  (+28.97%),0.02,6.11  (-73.98%),6.11  (-90.54%),16   (+0.00%),"   16,  512,    1","   32,    1,    1"
+2,23.28,sortRowsKernelInt,sortRowsKernelInt(int..int),"22.63 (+88,966.75%)",5.27,89.48 (+280.87%),89.48  (+38.55%),18  (+12.50%),"  512,    1,    1","   32,    1,    1"
+3,89.13,transposeKernelInt,"transposeKernelInt(int *, int..",0.05 (+111.96%),0.05,11.49  (-51.10%),35.52  (-45.01%),16   (+0.00%),"   16,   16,    1","   32,   32,    1"
+4,52.18,checkSortedRowWiseInt,checkSortedRowWiseInt(int..,0.08 (+198.99%),0.04,7.15  (-69.55%),8.15  (-87.38%),16   (+0.00%),"   16,  512,    1","   32,    1,    1"
+5,65.06,checkSortedColumnWiseInt,checkSortedColumnWiseInt(int..,0.03  (+29.35%),0.02,6.12  (-73.96%),6.12  (-90.53%),16   (+0.00%),"   16,  512,    1","   32,    1,    1"
+6,28.37,sortRowsKernelInt,sortRowsKernelInt(int..int),"22.25 (+87,467.76%)",6.31,91.03 (+287.46%),91.03  (+40.95%),18  (+12.50%),"  512,    1,    1","   32,    1,    1"
+7,86.92,transposeKernelInt,"transposeKernelInt(int *, int..",0.06 (+121.41%),0.05,11.42  (-51.38%),35.31  (-45.33%),16   (+0.00%),"   16,   16,    1","   32,   32,    1"
+8,87.19,checkSortedRowWiseInt,checkSortedRowWiseInt(int..,"32.41 (+127,439.17%)",28.25,3.12  (-86.73%),49.82  (-22.87%),16   (+0.00%),"   16,  512,    1","   32,    1,    1"
+9,59.99,checkSortedColumnWiseInt,checkSortedColumnWiseInt(int..,"4.43 (+17,318.14%)",2.66,23.11   (-1.63%),40.01  (-38.05%),16   (+0.00%),"   16,  512,    1","   32,    1,    1"

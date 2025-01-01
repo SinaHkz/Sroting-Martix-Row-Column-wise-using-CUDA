@@ -97,38 +97,59 @@ __global__ void checkSortedColumnWiseDouble(double *matrix, int rows, int cols, 
 // kernels to sort all rows with multiple data types
 __global__ void sortRowsKernelInt(int *matrix, int rows, int cols)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < rows)
-    {
-        int start = i * cols;                // Calculate the starting index for this row
-        bubbleSortInt(matrix + start, cols); // Sorting the row using the start index, 1 row, and cols columns
+    extern __shared__ int sharedRowInt[];
+
+    int row = blockIdx.x;
+    if (row < rows){
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            sharedRowInt[i] = matrix[row * cols + i];
+
+        __syncthreads();
+
+        bubbleSortInt(sharedRowInt, cols);
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            matrix[row * cols + i] = sharedRowInt[i];
     }
 }
 
 __global__ void sortRowsKernelFloat(float *matrix, int rows, int cols)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < rows)
-    {
-        int start = i * cols;                  // Calculate the starting index for this row
-        bubbleSortFloat(matrix + start, cols); // Sorting the row using the start index, 1 row, and cols columns
+    extern __shared__ float sharedRowFloat[];
+
+    int row = blockIdx.x;
+    if (row < rows){
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            sharedRowFloat[i] = matrix[row * cols + i];
+
+        __syncthreads();
+
+        bubbleSortFloat(sharedRowFloat, cols);
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            matrix[row * cols + i] = sharedRowFloat[i];
     }
 }
 
 __global__ void sortRowsKernelDouble(double *matrix, int rows, int cols)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < rows)
-    {
-        int start = i * cols;                   // Calculate the starting index for this row
-        bubbleSortDouble(matrix + start, cols); // Sorting the row using the start index, 1 row, and cols columns
+    extern __shared__ double sharedRowDouble[];
+
+    int row = blockIdx.x;
+    if (row < rows){
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            sharedRowDouble[i] = matrix[row * cols + i];
+
+        __syncthreads();
+
+        bubbleSortDouble(sharedRowDouble, cols);
+        for (int i = threadIdx.x; i < cols; i += blockDim.x)
+            matrix[row * cols + i] = sharedRowDouble[i];
     }
 }
 
 // kernels to transpose matrix for multiple data types
 __global__ void transposeKernelInt(int *input, int *output, int rows, int cols)
 {
-    __shared__ int tile[TILE_SIZE][TILE_SIZE]; // Shared memory without padding
+    __shared__ int tile[TILE_SIZE][TILE_SIZE + 1]; // Shared memory without padding
 
     int x = blockIdx.x * TILE_SIZE + threadIdx.x; // Global column index
     int y = blockIdx.y * TILE_SIZE + threadIdx.y; // Global row index
