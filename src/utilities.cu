@@ -54,16 +54,17 @@ void *readMatrix(const char *filename, int *rows, int *cols, MatrixType *type)
         elementSize = sizeof(double);
     }
 
-    // Allocate memory for the matrix as a single contiguous block
-    void *matrix = malloc(*rows * *cols * elementSize);
-    if (matrix == NULL)
+    // Allocate pinned memory for the matrix
+    void *matrix;
+    cudaError_t err = cudaMallocHost(&matrix, *rows * *cols * elementSize);
+    if (err != cudaSuccess)
     {
-        perror("Error allocating memory for matrix");
+        fprintf(stderr, "Error allocating pinned memory for matrix: %s\n", cudaGetErrorString(err));
         fclose(file);
         return NULL;
     }
 
-    // Read matrix elements into the contiguous memory block
+    // Read matrix elements into the allocated memory
     for (int i = 0; i < *rows; i++)
     {
         for (int j = 0; j < *cols; j++)
@@ -74,7 +75,7 @@ void *readMatrix(const char *filename, int *rows, int *cols, MatrixType *type)
                 if (fscanf(file, "%d", &((int *)matrix)[index]) != 1)
                 {
                     fprintf(stderr, "Error reading matrix element at (%d, %d)\n", i, j);
-                    free(matrix);
+                    cudaFreeHost(matrix);
                     fclose(file);
                     return NULL;
                 }
@@ -84,7 +85,7 @@ void *readMatrix(const char *filename, int *rows, int *cols, MatrixType *type)
                 if (fscanf(file, "%f", &((float *)matrix)[index]) != 1)
                 {
                     fprintf(stderr, "Error reading matrix element at (%d, %d)\n", i, j);
-                    free(matrix);
+                    cudaFreeHost(matrix);
                     fclose(file);
                     return NULL;
                 }
@@ -94,7 +95,7 @@ void *readMatrix(const char *filename, int *rows, int *cols, MatrixType *type)
                 if (fscanf(file, "%lf", &((double *)matrix)[index]) != 1)
                 {
                     fprintf(stderr, "Error reading matrix element at (%d, %d)\n", i, j);
-                    free(matrix);
+                    cudaFreeHost(matrix);
                     fclose(file);
                     return NULL;
                 }
@@ -121,7 +122,7 @@ void writeMatrix(const char *filename, void *matrix, int rows, int cols, MatrixT
                                                                   : "double";
     fprintf(file, "%s %d %d\n", typeStr, rows, cols);
 
-    // Write matrix elements from the contiguous memory block
+    // Write matrix elements from the allocated memory
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
