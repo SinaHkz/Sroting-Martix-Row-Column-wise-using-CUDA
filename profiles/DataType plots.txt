@@ -1,0 +1,18 @@
+float:
+sortRowKernelInt: 8.44565s
+checkSortedRowWiseFloat : 1.2426ms
+transposeKernelFloat: 1.3894ms
+Number of calls: 2
+
+double:
+sortRowKernelInt: 572.17ms
+checkSortedRowWiseFloat : 2.8050ms
+transposeKernelFloat: 410.69us
+Number of calls: 24
+
+int:
+sortRowKernelInt: 229.11ms
+checkSortedRowWiseFloat : 560.15us
+transposeKernelFloat: 1.3909ms
+Number of calls: 30
+

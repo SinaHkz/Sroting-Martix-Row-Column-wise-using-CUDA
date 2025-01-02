@@ -128,7 +128,7 @@ __global__ void sortRowsKernelInt(int *matrix, int rows, int cols)
 
         __syncthreads();
 
-        bubbleSortInt(sharedRowInt, cols);
+       mergeSortInt(sharedRowInt, cols);
         for (int i = threadIdx.x; i < cols; i += blockDim.x)
             matrix[row * cols + i] = sharedRowInt[i];
     }
@@ -164,7 +164,7 @@ __global__ void sortRowsKernelDouble(double *matrix, int rows, int cols)
 
         __syncthreads();
 
-        bubbleSortDouble(sharedRowDouble, cols);
+        mergeSortDouble(sharedRowDouble, cols);
         for (int i = threadIdx.x; i < cols; i += blockDim.x)
             matrix[row * cols + i] = sharedRowDouble[i];
     }
@@ -324,152 +324,134 @@ __device__ void bubbleSortDouble(double *row, int cols)
     }
 }
 
-__device__ void mergeSortInt(int *array, int cols)
+__device__ void mergeInt(int *sharedRowInt, int left, int mid, int right)
 {
-    int *temp = (int *)malloc(cols * sizeof(int)); // Temporary array for merging
+    int i = left;    // Pointer for the left half
+    int j = mid;     // Pointer for the right half
 
-    for (int width = 1; width < cols; width *= 2) // Increase width of subarrays
+    // Merge the two halves in-place
+    while (i < mid && j < right)
     {
-        for (int i = 0; i < cols; i += 2 * width) // Iterate over pairs of subarrays
+        if (sharedRowInt[i] <= sharedRowInt[j])
         {
-            int left = i;                         // Left subarray start
-            int mid = min(i + width, cols);       // End of left subarray (start of right)
-            int right = min(i + 2 * width, cols); // End of right subarray
-
-            int l = left, r = mid, k = left;
-
-            // Merge the two subarrays
-            while (l < mid && r < right)
-            {
-                if (array[l] <= array[r])
-                {
-                    temp[k++] = array[l++];
-                }
-                else
-                {
-                    temp[k++] = array[r++];
-                }
-            }
-
-            // Copy remaining elements from left subarray
-            while (l < mid)
-            {
-                temp[k++] = array[l++];
-            }
-
-            // Copy remaining elements from right subarray
-            while (r < right)
-            {
-                temp[k++] = array[r++];
-            }
+            i++;
         }
-
-        // Copy merged subarray back to the original array
-        for (int i = 0; i < cols; i++)
+        else
         {
-            array[i] = temp[i];
+            int temp = sharedRowInt[j];
+            // Shift elements to the right
+            for (int m = j; m > i; m--)
+            {
+                sharedRowInt[m] = sharedRowInt[m - 1]; // Shift right
+            }
+            sharedRowInt[i] = temp; // Insert the element in the correct position
+            i++;
+            j++;
         }
     }
-
-    free(temp); // Free the temporary array
 }
 
-__device__ void mergeSortFloat(float *array, int cols)
+__device__ void mergeSortInt(int *sharedRowInt, int cols)
 {
-    float *temp = (float *)malloc(cols * sizeof(float)); // Temporary array for merging
-
-    for (int width = 1; width < cols; width *= 2) // Increase width of subarrays
+    // Iterative bottom-up merge sort
+    for (int size = 1; size < cols; size *= 2)
     {
-        for (int i = 0; i < cols; i += 2 * width) // Iterate over pairs of subarrays
+        for (int left = 0; left < cols; left += 2 * size)
         {
-            int left = i;                         // Left subarray start
-            int mid = min(i + width, cols);       // End of left subarray (start of right)
-            int right = min(i + 2 * width, cols); // End of right subarray
+            int mid = min(left + size, cols);
+            int right = min(left + 2 * size, cols);
 
-            int l = left, r = mid, k = left;
-
-            // Merge the two subarrays
-            while (l < mid && r < right)
-            {
-                if (array[l] <= array[r])
-                {
-                    temp[k++] = array[l++];
-                }
-                else
-                {
-                    temp[k++] = array[r++];
-                }
-            }
-
-            // Copy remaining elements from left subarray
-            while (l < mid)
-            {
-                temp[k++] = array[l++];
-            }
-
-            // Copy remaining elements from right subarray
-            while (r < right)
-            {
-                temp[k++] = array[r++];
-            }
+            // Merge the two sorted halves
+            mergeInt(sharedRowInt, left, mid, right);
         }
-
-        // Copy merged subarray back to the original array
-        for (int i = 0; i < cols; i++)
-        {
-            array[i] = temp[i];
-        }
+        __syncthreads();
     }
-
-    free(temp); // Free the temporary array
 }
 
-__device__ void mergeSortDouble(double *array, int cols)
+__device__ void mergeFloat(float *sharedRow, int left, int mid, int right)
 {
-    double *temp = (double *)malloc(cols * sizeof(double)); // Temporary array for merging
+    int i = left;    // Pointer for the left half
+    int j = mid;     // Pointer for the right half
 
-    for (int width = 1; width < cols; width *= 2) // Increase width of subarrays
+    // Merge the two halves in-place
+    while (i < mid && j < right)
     {
-        for (int i = 0; i < cols; i += 2 * width) // Iterate over pairs of subarrays
+        if (sharedRow[i] <= sharedRow[j])
         {
-            int left = i;                         // Left subarray start
-            int mid = min(i + width, cols);       // End of left subarray (start of right)
-            int right = min(i + 2 * width, cols); // End of right subarray
-
-            int l = left, r = mid, k = left;
-
-            // Merge the two subarrays
-            while (l < mid && r < right)
-            {
-                if (array[l] <= array[r])
-                {
-                    temp[k++] = array[l++];
-                }
-                else
-                {
-                    temp[k++] = array[r++];
-                }
-            }
-
-            // Copy remaining elements from left subarray
-            while (l < mid)
-            {
-                temp[k++] = array[l++];
-            }
-
-            // Copy remaining elements from right subarray
-            while (r < right)
-            {
-                temp[k++] = array[r++];
-            }
+            i++;
         }
-
-        // Copy merged subarray back to the original array
-        for (int i = 0; i < cols; i++)
+        else
         {
-            array[i] = temp[i];
+            float temp = sharedRow[j];
+            // Shift elements to the right
+            for (int m = j; m > i; m--)
+            {
+                sharedRow[m] = sharedRow[m - 1]; // Shift right
+            }
+            sharedRow[i] = temp; // Insert the element in the correct position
+            i++;
+            j++;
         }
     }
+}
 
-    free(temp); // Free the temporary array
+__device__ void mergeSortFloat(float *sharedRow, int cols)
+{
+    // Iterative bottom-up merge sort
+    for (int size = 1; size < cols; size *= 2)
+    {
+        for (int left = 0; left < cols; left += 2 * size)
+        {
+            int mid = min(left + size, cols);
+            int right = min(left + 2 * size, cols);
+
+            // Merge the two sorted halves
+            mergeFloat(sharedRow, left, mid, right);
+        }
+        __syncthreads();
+    }
+}
+
+__device__ void mergeDouble(double *sharedRow, int left, int mid, int right)
+{
+    int i = left;    // Pointer for the left half
+    int j = mid;     // Pointer for the right half
+
+    // Merge the two halves in-place
+    while (i < mid && j < right)
+    {
+        if (sharedRow[i] <= sharedRow[j])
+        {
+            i++;
+        }
+        else
+        {
+            double temp = sharedRow[j];
+            // Shift elements to the right
+            for (int m = j; m > i; m--)
+            {
+                sharedRow[m] = sharedRow[m - 1]; // Shift right
+            }
+            sharedRow[i] = temp; // Insert the element in the correct position
+            i++;
+            j++;
+        }
+    }
+}
+
+__device__ void mergeSortDouble(double *sharedRow, int cols)
+{
+    // Iterative bottom-up merge sort
+    for (int size = 1; size < cols; size *= 2)
+    {
+        for (int left = 0; left < cols; left += 2 * size)
+        {
+            int mid = min(left + size, cols);
+            int right = min(left + 2 * size, cols);
+
+            // Merge the two sorted halves
+            mergeDouble(sharedRow, left, mid, right);
+        }
+        __syncthreads();
+    }
 }

@@ -28,17 +28,16 @@ __global__ void transposeKernelDouble(double *input, double *output, int rows, i
 
 __global__ void transposeKernelFloat(float *input, float *output, int rows, int cols) ;
 
-// __device__ void mergeSortInt(int* arr, int left, int right);
-
-// __device__ void mergeSortFloat(float* arr, int left, int right);
-
-// __device__ void mergeSortDouble(double* arr, int left, int right);
 
 __device__ void bubbleSortDouble(double *row, int cols);
 __device__ void bubbleSortFloat(float *row, int cols);
 __device__ void bubbleSortInt(int *row, int cols);
 
 
-__device__ void mergeSortInt(int *array, int cols);
-__device__ void mergeSortFloat(float *array, int cols);
-__device__ void mergeSortDouble(double *array, int cols);
+__device__ void mergeSortInt(int *sharedRowInt, int cols);
+__device__ void mergeSortFloat(float *sharedRow, int cols);
+__device__ void mergeSortDouble(double *sharedRow, int cols);
+
+__device__ void mergeInt(int *sharedRowInt, int left, int mid, int right);
+__device__ void mergeFloat(float *sharedRow, int left, int mid, int right);
+__device__ void mergeDouble(double *sharedRow, int left, int mid, int right);

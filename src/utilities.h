@@ -10,11 +10,6 @@ void writeMatrix(const char* filename, void* matrix, int rows, int cols, MatrixT
 
 bool isMatrixSorted(void *matrix, int rows, int cols, MatrixType type, int *foundUnsorted);
 
-// __device__ void mergeSortInt(int* arr, int left, int right);
-
-// __device__ void mergeSortFloat(float* arr, int left, int right);
-
-// __device__ void mergeSortDouble(double* arr, int left, int right);
 
 #include "kernels.h"
 
