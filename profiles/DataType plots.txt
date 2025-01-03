@@ -16,3 +16,162 @@ checkSortedRowWiseFloat : 560.15us
 transposeKernelFloat: 1.3909ms
 Number of calls: 30
 
+<
+51.520 ms
+54.2030 ms
+
+              Type              Time(%)   Time         Calls    Avg       Min       Max      Name
+4 streams:    GPU activities:   94.52%  135.98ms        26  5.2301ms  1.2194ms  31.948ms  sortRowsKernelInt(int*, int, int)
+8 streams:    GPU activities:   94.91%  135.69ms        30  4.5231ms  1.2141ms  26.536ms  sortRowsKernelInt(int*, int, int)
+16 streams:   GPU activities:   97.07%  254.35ms        38  6.6934ms  1.7031ms  38.268ms  sortRowsKernelInt(int*, int, int)
+32 streams:   GPU activities:   97.31%  281.00ms        54  5.2037ms  1.2188ms  26.519ms  sortRowsKernelInt(int*, int, int)
+64 streams:   GPU activities:   98.37%  488.91ms        86  5.6850ms  1.2213ms  26.549ms  sortRowsKernelInt(int*, int, int)
+128 streams:  GPU activities:   99.10%  901.65ms       150  6.0110ms  1.2146ms  26.507ms  sortRowsKernelInt(int*, int, int)
+
+
+
+1024 :
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   95.90%  200.89ms        27  7.4403ms  1.2796ms  47.721ms  sortRowsKernelInt(int*, int, int)
+                    1.53%  3.2002ms        24  133.34us  88.257us  187.07us  checkSortedRowWiseInt(int*, int, int, int*)
+                    1.19%  2.4887ms        24  103.70us  88.385us  115.11us  transposeKernelInt(int*, int*, int, int)
+                    1.01%  2.1080ms        24  87.832us  87.264us  88.481us  [CUDA memcpy DtoD]
+                    0.21%  445.57us         1  445.57us  445.57us  445.57us  [CUDA memcpy DtoH]
+                    0.17%  350.02us         4  87.505us  86.817us  88.545us  [CUDA memcpy HtoD]
+      API calls:   47.66%  179.34ms        26  6.8979ms  6.5870us  50.321ms  cudaDeviceSynchronize
+                   45.32%  170.57ms         1  170.57ms  170.57ms  170.57ms  cudaMallocHost
+                    5.45%  20.505ms         1  20.505ms  20.505ms  20.505ms  cudaMallocManaged
+                    0.91%  3.4179ms       114  29.981us     112ns  1.9627ms  cuDeviceGetAttribute
+                    0.31%  1.1584ms        75  15.444us  2.8140us  660.98us  cudaLaunchKernel
+                    0.18%  677.96us        25  27.118us  5.9230us  468.42us  cudaMemcpy
+                    0.08%  287.54us         3  95.846us  60.166us  123.37us  cudaFree
+                    0.05%  177.97us         2  88.983us  55.520us  122.45us  cudaMalloc
+                    0.03%  95.030us         4  23.757us  3.5430us  83.175us  cudaStreamCreate
+                    0.02%  66.651us         4  16.662us  7.1140us  38.438us  cudaMemcpyAsync
+                    0.00%  15.076us         4  3.7690us  2.0950us  8.5010us  cudaStreamDestroy
+                    0.00%  10.160us         1  10.160us  10.160us  10.160us  cuDeviceGetName
+                    0.00%  5.3790us        24     224ns     144ns     664ns  cudaGetLastError
+                    0.00%  4.8240us         1  4.8240us  4.8240us  4.8240us  cuDeviceGetPCIBusId
+                    0.00%  1.7550us         3     585ns     162ns  1.4150us  cuDeviceGetCount
+                    0.00%     504ns         2     252ns     124ns     380ns  cuDeviceGet
+                    0.00%     236ns         1     236ns     236ns     236ns  cuModuleGetLoadingMode
+                    0.00%     234ns         1     234ns     234ns     234ns  cuDeviceTotalMem
+                    0.00%     199ns         1     199ns     199ns     199ns  cuDeviceGetUuid
+
+==30121== Unified Memory profiling result:
+Device "NVIDIA GeForce GTX 1650 with Max-Q Design (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+      28  12.000KB  4.0000KB  60.000KB  336.0000KB  59.68000us  Host To Device
+      28  12.000KB  4.0000KB  60.000KB  336.0000KB  53.21600us  Device To Host
+      24         -         -         -           -  2.362860ms  Gpu page fault groups
+      21  4.0000KB  4.0000KB  4.0000KB  84.00000KB           -  Memory thrashes
+
+2048:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   97.29%  904.31ms        29  31.183ms  9.5635ms  207.05ms  sortRowsKernelInt(int*, int, int)
+                    0.98%  9.1049ms        26  350.19us  347.81us  350.79us  [CUDA memcpy DtoD]
+                    0.98%  9.0861ms        26  349.47us  348.36us  351.14us  transposeKernelInt(int*, int*, int, int)
+                    0.42%  3.9377ms        26  151.45us  98.816us  480.29us  checkSortedRowWiseInt(int*, int, int, int*)
+                    0.18%  1.6787ms         1  1.6787ms  1.6787ms  1.6787ms  [CUDA memcpy DtoH]
+                    0.15%  1.3978ms         4  349.46us  333.89us  388.48us  [CUDA memcpy HtoD]
+      API calls:   81.60%  893.49ms        28  31.910ms  1.8380us  298.50ms  cudaDeviceSynchronize
+                   15.89%  173.98ms         1  173.98ms  173.98ms  173.98ms  cudaMallocHost
+                    1.89%  20.653ms         1  20.653ms  20.653ms  20.653ms  cudaMallocManaged
+                    0.33%  3.5640ms       114  31.262us     111ns  2.0154ms  cuDeviceGetAttribute
+                    0.17%  1.8733ms        27  69.379us  5.4380us  1.6910ms  cudaMemcpy
+                    0.08%  832.65us        81  10.279us  2.7440us  385.21us  cudaLaunchKernel
+                    0.02%  214.55us         3  71.515us  55.799us  92.199us  cudaFree
+                    0.02%  177.30us         2  88.651us  67.050us  110.25us  cudaMalloc
+                    0.00%  45.060us         4  11.265us  1.6700us  39.162us  cudaStreamCreate
+                    0.00%  37.167us         4  9.2910us  3.4190us  23.125us  cudaMemcpyAsync
+                    0.00%  16.017us         4  4.0040us  2.1580us  9.3910us  cudaStreamDestroy
+                    0.00%  9.8640us         1  9.8640us  9.8640us  9.8640us  cuDeviceGetName
+                    0.00%  4.7570us        26     182ns     126ns     340ns  cudaGetLastError
+                    0.00%  4.7490us         1  4.7490us  4.7490us  4.7490us  cuDeviceGetPCIBusId
+                    0.00%  1.9210us         3     640ns     152ns  1.5980us  cuDeviceGetCount
+                    0.00%     502ns         2     251ns     121ns     381ns  cuDeviceGet
+                    0.00%     303ns         1     303ns     303ns     303ns  cuModuleGetLoadingMode
+                    0.00%     294ns         1     294ns     294ns     294ns  cuDeviceTotalMem
+                    0.00%     162ns         1     162ns     162ns     162ns  cuDeviceGetUuid
+
+==30262== Unified Memory profiling result:
+Device "NVIDIA GeForce GTX 1650 with Max-Q Design (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+      30  11.466KB  4.0000KB  60.000KB  344.0000KB  55.55100us  Host To Device
+      30  11.466KB  4.0000KB  60.000KB  344.0000KB  48.48300us  Device To Host
+      26         -         -         -           -  2.039125ms  Gpu page fault groups
+      21  4.0000KB  4.0000KB  4.0000KB  84.00000KB           -  Memory thrashes
+
+4096:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   98.54%  6.75567s        31  217.92ms  79.776ms  1.59730s  sortRowsKernelInt(int*, int, int)
+                    0.57%  39.117ms        28  1.3970ms  1.3966ms  1.3975ms  [CUDA memcpy DtoD]
+                    0.57%  38.946ms        28  1.3909ms  1.3885ms  1.3927ms  transposeKernelInt(int*, int*, int, int)
+                    0.14%  9.8584ms        28  352.08us  140.80us  3.1663ms  checkSortedRowWiseInt(int*, int, int, int*)
+                    0.10%  6.7637ms         1  6.7637ms  6.7637ms  6.7637ms  [CUDA memcpy DtoH]
+                    0.08%  5.6763ms         4  1.4191ms  1.3820ms  1.4536ms  [CUDA memcpy HtoD]
+      API calls:   96.78%  6.78523s        30  226.17ms  2.7620us  1.88115s  cudaDeviceSynchronize
+                    2.73%  191.24ms         1  191.24ms  191.24ms  191.24ms  cudaMallocHost
+                    0.30%  20.705ms         1  20.705ms  20.705ms  20.705ms  cudaMallocManaged
+                    0.10%  7.0632ms        29  243.56us  5.8310us  6.7772ms  cudaMemcpy
+                    0.05%  3.6407ms       114  31.936us     193ns  2.0436ms  cuDeviceGetAttribute
+                    0.03%  2.2241ms        87  25.564us  2.8790us  1.4631ms  cudaLaunchKernel
+                    0.00%  253.32us         3  84.440us  67.381us  118.12us  cudaFree
+                    0.00%  229.11us         2  114.55us  70.471us  158.64us  cudaMalloc
+                    0.00%  44.532us         4  11.133us  1.7060us  37.432us  cudaStreamCreate
+                    0.00%  37.004us         4  9.2510us  3.4340us  22.547us  cudaMemcpyAsync
+                    0.00%  16.353us         1  16.353us  16.353us  16.353us  cuDeviceGetName
+                    0.00%  15.230us         4  3.8070us  2.0010us  8.7320us  cudaStreamDestroy
+                    0.00%  5.6290us        28     201ns     133ns     300ns  cudaGetLastError
+                    0.00%  4.8300us         1  4.8300us  4.8300us  4.8300us  cuDeviceGetPCIBusId
+                    0.00%  2.2870us         3     762ns     300ns  1.6580us  cuDeviceGetCount
+                    0.00%  1.0560us         2     528ns     250ns     806ns  cuDeviceGet
+                    0.00%     461ns         1     461ns     461ns     461ns  cuDeviceTotalMem
+                    0.00%     381ns         1     381ns     381ns     381ns  cuModuleGetLoadingMode
+                    0.00%     340ns         1     340ns     340ns     340ns  cuDeviceGetUuid
+
+==30550== Unified Memory profiling result:
+Device "NVIDIA GeForce GTX 1650 with Max-Q Design (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+      32  11.000KB  4.0000KB  60.000KB  352.0000KB  74.65500us  Host To Device
+      32  11.000KB  4.0000KB  60.000KB  352.0000KB  48.89500us  Device To Host
+      28         -         -         -           -  2.958973ms  Gpu page fault groups
+      21  4.0000KB  4.0000KB  4.0000KB  84.00000KB           -  Memory thrashes
+ 
+ 8192:
+             Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   99.60%  132.218s        33  4.00662s  1.57152s  30.2782s  sortRowsKernelInt(int*, int, int)
+                    0.17%  221.91ms        30  7.3972ms  7.3944ms  7.4008ms  transposeKernelInt(int*, int*, int, int)
+                    0.13%  167.55ms        30  5.5851ms  5.5840ms  5.5874ms  [CUDA memcpy DtoD]
+                    0.07%  90.396ms        30  3.0132ms  318.02us  47.831ms  checkSortedRowWiseInt(int*, int, int, int*)
+                    0.02%  27.298ms         1  27.298ms  27.298ms  27.298ms  [CUDA memcpy DtoH]
+                    0.02%  21.908ms         4  5.4769ms  5.3649ms  5.6670ms  [CUDA memcpy HtoD]
+      API calls:   99.76%  132.505s        32  4.14079s  5.3860us  33.9988s  cudaDeviceSynchronize
+                    0.19%  254.40ms         1  254.40ms  254.40ms  254.40ms  cudaMallocHost
+                    0.02%  27.789ms        31  896.41us  10.836us  27.320ms  cudaMemcpy
+                    0.02%  20.621ms         1  20.621ms  20.621ms  20.621ms  cudaMallocManaged
+                    0.00%  6.4976ms        93  69.866us  3.6000us  5.4446ms  cudaLaunchKernel
+                    0.00%  3.4561ms       114  30.316us     112ns  1.9853ms  cuDeviceGetAttribute
+                    0.00%  417.72us         3  139.24us  77.628us  191.55us  cudaFree
+                    0.00%  253.51us         2  126.75us  77.761us  175.75us  cudaMalloc
+                    0.00%  47.620us         4  11.905us  1.6210us  42.264us  cudaStreamCreate
+                    0.00%  37.514us         4  9.3780us  3.4850us  23.647us  cudaMemcpyAsync
+                    0.00%  15.959us         4  3.9890us  2.1540us  9.0000us  cudaStreamDestroy
+                    0.00%  9.6480us         1  9.6480us  9.6480us  9.6480us  cuDeviceGetName
+                    0.00%  9.3680us        30     312ns     199ns     607ns  cudaGetLastError
+                    0.00%  4.6750us         1  4.6750us  4.6750us  4.6750us  cuDeviceGetPCIBusId
+                    0.00%     974ns         3     324ns     151ns     652ns  cuDeviceGetCount
+                    0.00%     546ns         2     273ns     137ns     409ns  cuDeviceGet
+                    0.00%     451ns         1     451ns     451ns     451ns  cuDeviceTotalMem
+                    0.00%     214ns         1     214ns     214ns     214ns  cuModuleGetLoadingMode
+                    0.00%     185ns         1     185ns     185ns     185ns  cuDeviceGetUuid
+
+==31488== Unified Memory profiling result:
+Device "NVIDIA GeForce GTX 1650 with Max-Q Design (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+      60  32.000KB  4.0000KB  60.000KB  1.875000MB  210.0810us  Host To Device
+      60  32.000KB  4.0000KB  60.000KB  1.875000MB  188.6430us  Device To Host
+      30         -         -         -           -  3.892363ms  Gpu page fault groups
+      48  4.0000KB  4.0000KB  4.0000KB  192.0000KB           -  Memory thrashes
+
+      

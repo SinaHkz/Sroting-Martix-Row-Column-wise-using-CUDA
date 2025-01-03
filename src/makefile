@@ -54,7 +54,7 @@ profile2:
 	nsys profile --trace=cuda --output=program_trace $(EXEC) $(INPUT) $(OUTPUT)
 
 profileTime:
-	nvprof --print-gpu-summary $(EXEC) $(INPUT) $(OUTPUT)
+	nvprof $(EXEC) $(INPUT) $(OUTPUT)
 
 
 
